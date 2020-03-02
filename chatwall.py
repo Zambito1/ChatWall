@@ -1,10 +1,9 @@
 import argparse
-import sqlite3
 import os
-from datetime import date
+import sqlite3
 
-from dotenv import load_dotenv
 from algosdk import account, algod, transaction
+from dotenv import load_dotenv
 
 parser = argparse.ArgumentParser(description="ChatWall CLI")
 
@@ -50,7 +49,14 @@ def txn_message_to(from_addr, message, to_addr):
 
 
 def get_messages(to_addr, first=None, last=None, from_date=None, to_date=None):
-    return acl.transactions_by_address(to_addr, first, last, from_date, to_date)
+    txns = acl.transactions_by_address(to_addr, first, last, from_date, to_date)
+
+    messages = []
+
+    for txn in tnxs:
+        print("txn: ", txn)
+
+    return messages
 
 
 if __name__ == '__main__':
@@ -72,7 +78,7 @@ if __name__ == '__main__':
     if args.read_messages:
         messages = None
         try:
-            messages = get_messages(address, first=sp['lastRound'] - 1000, last=sp['lastRound'])
+            messages = get_messages(address, first=sp['lastRound'] - 2000, last=sp['lastRound'])
         except:
             pass
 
