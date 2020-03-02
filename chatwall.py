@@ -11,8 +11,8 @@ c.execute("CREATE TABLE IF NOT EXISTS accounts (private_key TEXT, address TEXT);
 
 acl = algod.AlgodClient(os.getenv("API_TOKEN"), os.getenv("API_ADDRESS"))
 
-if __name__ == '__main__':
 
+def get_or_gen_account():
     res = c.execute("SELECT private_key, address FROM accounts;").fetchone()
     private_key = None
     address = None
@@ -28,18 +28,37 @@ if __name__ == '__main__':
         private_key = res[0]
         address = res[1]
 
+    return (private_key, address)
+
+
+def txn_message_to(from_addr, message, to_addr):
     sp = acl.suggested_params()
 
-    note = "Hello Algorand!".encode()
+    note = message.encode()
     amount = 0
-    txn = transaction.PaymentTxn(address, sp["fee"], sp["lastRound"], sp["lastRound"] + 500, sp['genesishashb64'], address, amount, note=note)
+    txn = transaction.PaymentTxn(account.address_from_private_key(from_addr), sp["fee"], sp["lastRound"], sp["lastRound"] + 500, sp['genesishashb64'],
+                                 to_addr, amount, note=note)
 
     # Sign transaction
     stx = txn.sign(private_key)
 
-    # Send transaction
-    txid = acl.send_transaction(stx)
+    return stx
 
+
+if __name__ == '__main__':
+
+    # Get account
+    (private_key, address) = get_or_gen_account()
+
+    message = "Hello world!"
+
+    # Generate the signed transaction
+    txn = txn_message_to(private_key, message, address)
+
+    # Send transaction over the network
+    txid = acl.send_transaction(txn)
+
+    print(f'"{message}" sent to {address}')
     print("Transaction ID: ", txid)
 
 conn.close()
